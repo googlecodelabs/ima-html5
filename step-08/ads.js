@@ -20,30 +20,57 @@ let adDisplayContainer;
 let adsLoader;
 let adsManager;
 let playClicked;
+let autoplayAllowed;
+let autoplayRequiresMuted;
 
 function init() {
   videoContent = document.getElementById('contentElement');
   playButton = document.getElementById('playButton');
   playButton.addEventListener('click', onPlayClicked);
+  checkAutoplaySupport();
   setUpIMA();
+}
+
+function checkAutoplaySupport() {
+  videoContent.play().then(onUnmutedAutoplaySuccess, onUnmutedAutoplayFail);
+}
+
+function onUnmutedAutoplaySuccess() {
+  videoContent.pause();
+  autoplayAllowed = true;
+  autoplayRequiresMuted = false;
+  requestAds();
+}
+
+function onUnmutedAutoplayFail() {
+  checkMutedAutoplaySupport();
+}
+
+function checkMutedAutoplaySupport() {
+  videoContent.volume = 0;
+  videoContent.muted = true;
+  videoContent.play().then(onMutedAutoplaySuccess, onMutedAutoplayFail);
+}
+
+function onMutedAutoplaySuccess() {
+  videoContent.pause();
+  autoplayAllowed = true;
+  autoplayRequiresMuted = true;
+  requestAds();
+}
+
+function onMutedAutoplayFail() {
+  videoContent.volume = 1;
+  videoContent.muted = false;
+  autoplayAllowed = false;
+  autoplayRequiresMuted = false;
+  requestAds();
 }
 
 function setUpIMA() {
   adDisplayContainer = new google.ima.AdDisplayContainer(
       document.getElementById('adContainer'), videoContent);
-
-  const adsRequest = new google.ima.AdsRequest();
-  adsRequest.adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?' +
-      'sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&' +
-      'impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&' +
-      'cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
-  adsRequest.setAdWillAutoPlay(false);
-  adsRequest.setAdWillPlayMuted(false);
-  adsRequest.linearAdSlotWidth = 640;
-  adsRequest.linearAdSlotHeight = 360;
-  adsRequest.nonLinearAdSlotWidth = 640;
-  adsRequest.nonLinearAdSlotHeight = 150;
-
+  
   adsLoader = new google.ima.AdsLoader(adDisplayContainer);
 
   videoContent.onended = () => {adsLoader.contentComplete();};
@@ -56,6 +83,21 @@ function setUpIMA() {
       google.ima.AdErrorEvent.Type.AD_ERROR,
       onAdError,
       false);
+}
+
+function requestAds() {
+  const adsRequest = new google.ima.AdsRequest();
+  adsRequest.adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?' +
+      'sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&' +
+      'impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&' +
+      'cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
+  adsRequest.setAdWillAutoPlay(autoplayAllowed);
+  adsRequest.setAdWillPlayMuted(autoplayRequiresMuted);
+  adsRequest.linearAdSlotWidth = 640;
+  adsRequest.linearAdSlotHeight = 360;
+  adsRequest.nonLinearAdSlotWidth = 640;
+  adsRequest.nonLinearAdSlotHeight = 150;
+
   adsLoader.requestAds(adsRequest);
 }
 
@@ -77,8 +119,10 @@ function onAdsManagerLoaded(adsManagerLoadedEvent) {
   adsManager.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
       onAdError);
-  if (playClicked) {
+  if (playClicked || autoplayAllowed) {
     playAds();
+  } else if (!autoplayAllowed) {
+    playButton.style.display = 'block';
   }
 }
 

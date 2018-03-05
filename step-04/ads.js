@@ -18,8 +18,6 @@ let playButton;
 let videoContent;
 let adDisplayContainer;
 let adsLoader;
-let adsManager;
-let playClicked;
 
 function init() {
   videoContent = document.getElementById('contentElement');
@@ -43,80 +41,16 @@ function setUpIMA() {
   adsRequest.linearAdSlotHeight = 360;
   adsRequest.nonLinearAdSlotWidth = 640;
   adsRequest.nonLinearAdSlotHeight = 150;
-
+  
   adsLoader = new google.ima.AdsLoader(adDisplayContainer);
 
   videoContent.onended = () => {adsLoader.contentComplete();};
 
-  adsLoader.addEventListener(
-    google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-      onAdsManagerLoaded,
-      false);
-  adsLoader.addEventListener(
-      google.ima.AdErrorEvent.Type.AD_ERROR,
-      onAdError,
-      false);
   adsLoader.requestAds(adsRequest);
 }
 
-function onAdsManagerLoaded(adsManagerLoadedEvent) {
-  const adsRenderingSettings = new google.ima.AdsRenderingSettings();
-  adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
-  
-  adsManager = adsManagerLoadedEvent.getAdsManager(
-      videoContent, adsRenderingSettings);
-  adsManager.addEventListener(
-      google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
-      onContentPauseRequested);
-  adsManager.addEventListener(
-      google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED,
-      onContentResumeRequested);
-  adsManager.addEventListener(
-      google.ima.AdEvent.Type.LOADED,
-      onAdLoaded);
-  adsManager.addEventListener(
-      google.ima.AdErrorEvent.Type.AD_ERROR,
-      onAdError);
-  if (playClicked) {
-    playAds();
-  }
-}
-
-function onContentPauseRequested() {
-  videoContent.pause();
-}
-
-function onContentResumeRequested() {
-  videoContent.play();
-}
-
-function onAdLoaded(adEvent) {
-  if (adEvent.type == google.ima.AdEvent.Type.LOADED &&
-      !adEvent.getAd().isLinear()) {
-    videoContent.play();
-  }
-}
-
-function onAdError(adErrorEvent) {
-  console.log(adErrorEvent.getError());
-  if (adsManager) {
-    adsManager.destroy();
-  }
-  videoContent.play();
-}
-
 function onPlayClicked() {
-  // videoContent.play();
-  playClicked = true;
-  if (adsManager) {
-    playAds();
-  }
-}
-
-function playAds() {
-  adDisplayContainer.initialize();
-  adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
-  adsManager.start();
+  videoContent.play();
 }
 
 init();

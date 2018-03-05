@@ -19,7 +19,6 @@ let videoContent;
 let adDisplayContainer;
 let adsLoader;
 let adsManager;
-let playClicked;
 
 function init() {
   videoContent = document.getElementById('contentElement');
@@ -77,9 +76,6 @@ function onAdsManagerLoaded(adsManagerLoadedEvent) {
   adsManager.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
       onAdError);
-  if (playClicked) {
-    playAds();
-  }
 }
 
 function onContentPauseRequested() {
@@ -106,17 +102,7 @@ function onAdError(adErrorEvent) {
 }
 
 function onPlayClicked() {
-  // videoContent.play();
-  playClicked = true;
-  if (adsManager) {
-    playAds();
-  }
-}
-
-function playAds() {
-  adDisplayContainer.initialize();
-  adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
-  adsManager.start();
+  videoContent.play();
 }
 
 init();
