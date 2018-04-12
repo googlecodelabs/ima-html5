@@ -44,11 +44,9 @@ function setUpIMA() {
   adsRequest.nonLinearAdSlotHeight = 150;
 
   adsLoader = new google.ima.AdsLoader(adDisplayContainer);
-
   videoContent.onended = () => {adsLoader.contentComplete();};
-
   adsLoader.addEventListener(
-    google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+      google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
       onAdsManagerLoaded,
       false);
   adsLoader.addEventListener(
