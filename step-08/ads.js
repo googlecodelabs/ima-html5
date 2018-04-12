@@ -60,7 +60,7 @@ function onMutedAutoplaySuccess() {
 }
 
 function onMutedAutoplayFail() {
-  videoContent.volume = 1;
+  videoContent.volume = 1.0;
   videoContent.muted = false;
   autoplayAllowed = false;
   autoplayRequiresMuted = false;
@@ -86,9 +86,11 @@ function setUpIMA() {
 function requestAds() {
   const adsRequest = new google.ima.AdsRequest();
   adsRequest.adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?' +
-      'sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&' +
-      'impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&' +
-      'cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
+      'sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&' +
+      'ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&' +
+      'unviewed_position_start=1&' +
+      'cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&' +
+      'vid=short_onecue&correlator=';
   adsRequest.setAdWillAutoPlay(autoplayAllowed);
   adsRequest.setAdWillPlayMuted(autoplayRequiresMuted);
   adsRequest.linearAdSlotWidth = 640;
@@ -97,6 +99,20 @@ function requestAds() {
   adsRequest.nonLinearAdSlotHeight = 150;
 
   adsLoader.requestAds(adsRequest);
+}
+
+function onPlayClicked() {
+  // videoContent.play();
+  playClicked = true;
+  if (adsManager) {
+    playAds();
+  }
+}
+
+function playAds() {
+  adDisplayContainer.initialize();
+  adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
+  adsManager.start();
 }
 
 function onAdsManagerLoaded(adsManagerLoadedEvent) {
@@ -117,6 +133,7 @@ function onAdsManagerLoaded(adsManagerLoadedEvent) {
   adsManager.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
       onAdError);
+
   if (playClicked || autoplayAllowed) {
     playAds();
   } else if (!autoplayAllowed) {
@@ -145,20 +162,6 @@ function onAdError(adErrorEvent) {
     adsManager.destroy();
   }
   videoContent.play();
-}
-
-function onPlayClicked() {
-  // videoContent.play();
-  playClicked = true;
-  if (adsManager) {
-    playAds();
-  }
-}
-
-function playAds() {
-  adDisplayContainer.initialize();
-  adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
-  adsManager.start();
 }
 
 init();
